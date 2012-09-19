@@ -11,24 +11,20 @@ if defined?(Rails)
     unless ActionView::Base.instance_methods.include? "wicked_pdf_stylesheet_link_tag"
       ActionView::Base.send :include, WickedPdfHelper
     end
-    
+
   else
 
     class WickedRailtie < Rails::Railtie
       initializer "wicked_pdf.register" do |app|
         ActionController::Base.send :include, PdfHelper
-        if Rails::VERSION::MINOR > 0
-          ActionView::Base.send :include, WickedPdfHelper::Assets
-        else
-          ActionView::Base.send :include, WickedPdfHelper
-        end
+        ActionView::Base.send :include, WickedPdfHelper
       end
     end
 
   end
-  
+
   if Mime::Type.lookup_by_extension(:pdf).nil?
     Mime::Type.register('application/pdf', :pdf)
   end
-  
+
 end
