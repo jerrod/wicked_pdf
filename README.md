@@ -1,4 +1,4 @@
-# Wicked PDF
+# Wicked PDF [![Build Status](https://secure.travis-ci.org/mileszs/wicked_pdf.png)](http://travis-ci.org/mileszs/wicked_pdf)
 
 ## A PDF generation plugin for Ruby on Rails
 
@@ -9,6 +9,10 @@ _Wicked PDF has been verified to work on Ruby 1.8.7 and 1.9.2; Rails 2 and Rails
 ### Installation
 
 First, be sure to install [wkhtmltopdf](http://code.google.com/p/wkhtmltopdf/).
+If your wkhtmltopdf executable is not on your webserver's path, configure it in an initializer:
+    WickedPdf.config = {
+      :exe_path => '/usr/local/bin/wkhtmltopdf'
+    }
 Note that versions before 0.9.0 [have problems](http://code.google.com/p/wkhtmltopdf/issues/detail?id=82&q=vodnik) on some machines with reading/writing to streams.
 This plugin relies on streams to communicate with wkhtmltopdf.
 
@@ -22,6 +26,10 @@ Next:
 or add this to your Gemfile:
 
     gem 'wicked_pdf'
+    
+You may also need to add 
+    Mime::Type.register "application/pdf", :pdf
+to config/initializers/mime_types.rb
 
 ### Basic Usage
 
@@ -44,6 +52,7 @@ or add this to your Gemfile:
           format.html
           format.pdf do
             render :pdf                            => 'file_name',
+                   :disposition	                   => 'attachment',                 # default 'inline'                   
                    :template                       => 'things/show.pdf.erb',
                    :layout                         => 'pdf.html',                   # use 'pdf.html' for a pdf.html.erb file
                    :wkhtmltopdf                    => '/usr/local/bin/wkhtmltopdf', # path to binary
@@ -61,14 +70,14 @@ or add this to your Gemfile:
                    :encoding                       => 'TEXT',
                    :user_style_sheet               => 'URL',
                    :cookie                         => ['_session_id SESSION_ID'], # could be an array or a single string in a 'name value' format
-                   :post                           => ['query QUERY_PARAM'],    # could be an array or a single string in a 'name value' format
+                   :post                           => ['query QUERY_PARAM'],      # could be an array or a single string in a 'name value' format
                    :redirect_delay                 => NUMBER,
                    :zoom                           => FLOAT,
                    :page_offset                    => NUMBER,
                    :book                           => true,
                    :default_header                 => true,
                    :disable_javascript             => false,
-                   :greyscale                      => true,
+                   :grayscale                      => true,
                    :lowquality                     => true,
                    :enable_plugins                 => true,
                    :disable_internal_links         => true,
@@ -77,7 +86,8 @@ or add this to your Gemfile:
                    :disable_smart_shrinking        => true,
                    :use_xserver                    => true,
                    :no_background                  => true,
-                   :margin => {:top                => SIZE,                         # default 10 (mm)
+                   :extra                          => ''                        # directly inserted into the command to wkhtmltopdf
+                   :margin => {:top                => SIZE,                     # default 10 (mm)
                                :bottom             => SIZE,
                                :left               => SIZE,
                                :right              => SIZE},
@@ -91,7 +101,8 @@ or add this to your Gemfile:
                                :left               => 'TEXT',
                                :right              => 'TEXT',
                                :spacing            => REAL,
-                               :line               => true},
+                               :line               => true,
+                               :content            => 'HTML CONTENT ALREADY RENDERED'}, # optionally you can pass plain html already rendered (useful if using pdf_from_string)
                    :footer => {:html => { :template => 'shared/footer.pdf.erb', # use :template OR :url
                                           :layout   => 'pdf_plain.html',        # optional, use 'pdf_plain.html' for a pdf_plain.html.erb file, defaults to main layout
                                           :url      => 'www.example.com',
@@ -102,7 +113,8 @@ or add this to your Gemfile:
                                :left               => 'TEXT',
                                :right              => 'TEXT',
                                :spacing            => REAL,
-                               :line               => true},
+                               :line               => true,
+                               :content            => 'HTML CONTENT ALREADY RENDERED'}, # optionally you can pass plain html already rendered (useful if using pdf_from_string)
                    :toc    => {:font_name          => "NAME",
                                :depth              => LEVEL,
                                :header_text        => "TEXT",
@@ -139,6 +151,11 @@ If you need to just create a pdf and not display it:
 
     # create a pdf from a string
     pdf = WickedPdf.new.pdf_from_string('<h1>Hello There!</h1>')
+
+    # create a pdf from string using templates, layouts and content option for header or footer
+    WickedPdf.new.pdf_from_string(
+        render_to_string(:pdf => "pdf_file.pdf", :template => 'templates/pdf.html.erb', :layout => 'pdfs/layout_pdf'), 
+        :footer => {:content => render_to_string({:template => 'templates/pdf_footer.html.erb', :layout => 'pdfs/layout_pdf'})}
 		
     # or from your controller, using views & templates and all wicked_pdf options as normal
     pdf = render_to_string :pdf => "some_file_name"
@@ -211,7 +228,7 @@ You can put your default configuration, applied to all pdf's at "wicked_pdf.rb" 
 
 ### Further Reading
 
-Andreas Happe's post [Generating PDFs from Ruby on Rails](http://starseeders.net/generating-pdfs-from-ruby-on-rails/)
+Andreas Happe's post [Generating PDFs from Ruby on Rails](http://snikt.net/rails/2012/04/26/wicked-pdf/)
 
 StackOverflow [questions with the tag "wicked-pdf"](http://stackoverflow.com/questions/tagged/wicked-pdf)
 
